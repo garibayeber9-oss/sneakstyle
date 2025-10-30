@@ -1,0 +1,585 @@
+DROP DATABASE IF EXISTS SneakStyle;
+CREATE DATABASE SneakStyle;
+USE SneakStyle;
+
+-- ==========================
+-- TABLAS BASE
+-- ==========================
+CREATE TABLE persona (
+    id_persona INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL,
+    apellido_paterno VARCHAR(100) NOT NULL,
+    apellido_materno VARCHAR(100),
+    telefono VARCHAR(15),
+    direccion TEXT
+);
+
+CREATE TABLE usuarios (
+    id_usuario INT AUTO_INCREMENT PRIMARY KEY,
+    nombre_usuario VARCHAR(50) NOT NULL UNIQUE,
+    contra_usuario VARCHAR(255) NOT NULL,
+    correo_usuario VARCHAR(100) NOT NULL UNIQUE,
+    rol_usuario ENUM('admin', 'cliente') DEFAULT 'cliente',
+    fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    activo BOOLEAN DEFAULT TRUE,
+    id_persona INT,
+    FOREIGN KEY (id_persona) REFERENCES persona(id_persona)
+);
+
+CREATE TABLE empleado (
+    id_empleado INT AUTO_INCREMENT PRIMARY KEY,
+    id_persona INT NOT NULL,
+    id_usuario INT NOT NULL,
+    nombre_completo VARCHAR(150) NOT NULL,
+    telefono VARCHAR(15),
+    correo_empleado VARCHAR(100) UNIQUE,
+    contrasenia VARCHAR(255),
+    activo BOOLEAN DEFAULT TRUE,
+    FOREIGN KEY (id_persona) REFERENCES persona(id_persona),
+    FOREIGN KEY (id_usuario) REFERENCES usuarios(id_usuario)
+);
+
+CREATE TABLE cliente (
+    id_cliente INT PRIMARY KEY,
+    FOREIGN KEY (id_cliente) REFERENCES usuarios(id_usuario)
+);
+
+CREATE TABLE admin (
+    id_admin INT PRIMARY KEY,
+    FOREIGN KEY (id_admin) REFERENCES usuarios(id_usuario)
+);
+
+CREATE TABLE proveedor (
+    id_proveedor INT AUTO_INCREMENT PRIMARY KEY,
+    nombre_empresa VARCHAR(100),
+    nombre_contacto VARCHAR(100),
+    telefono VARCHAR(15),
+    direccion TEXT,
+    activo BOOLEAN DEFAULT TRUE
+);
+
+CREATE TABLE producto (
+    idProducto INT AUTO_INCREMENT PRIMARY KEY,
+    nombreProducto VARCHAR(100) NOT NULL,
+    descripcion TEXT,
+    precio DECIMAL(10,2) NOT NULL,
+    categoria VARCHAR(50),
+    estatus INT DEFAULT 1
+);
+
+CREATE TABLE gestion_producto (
+    id_gestion INT AUTO_INCREMENT PRIMARY KEY,
+    id_producto INT,
+    id_usuario INT,
+    accion ENUM('insercion', 'modificacion') NOT NULL,
+    fecha_gestion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_producto) REFERENCES producto(idProducto),
+    FOREIGN KEY (id_usuario) REFERENCES usuarios(id_usuario)
+);
+
+CREATE TABLE inventario (
+    id_inventario INT AUTO_INCREMENT PRIMARY KEY,
+    id_producto INT NOT NULL,
+    cantidad INT NOT NULL DEFAULT 0,
+    id_proveedor INT NOT NULL,
+    FOREIGN KEY (id_producto) REFERENCES producto(idProducto),
+    FOREIGN KEY (id_proveedor) REFERENCES proveedor(id_proveedor),
+    UNIQUE KEY uq_inv (id_producto, id_proveedor)
+);
+
+-- ==========================
+-- PROCEDIMIENTOS
+-- ==========================
+DELIMITER $$
+
+-- EMPLEADO: AGREGAR CON TODO
+DROP PROCEDURE IF EXISTS sp_empleado_add $$
+CREATE PROCEDURE sp_empleado_add(
+  IN p_nombre VARCHAR(100),
+  IN p_apellido_paterno VARCHAR(100),
+  IN p_apellido_materno VARCHAR(100),
+  IN p_telefono VARCHAR(15),
+  IN p_direccion TEXT,
+  IN p_nombre_usuario VARCHAR(50),
+  IN p_contrasenia VARCHAR(255),
+  OUT p_id_empleado INT
+)
+BEGIN
+  DECLARE v_id_persona INT;
+  DECLARE v_id_usuario INT;
+  DECLARE correo_gen VARCHAR(100);
+  DECLARE pass_hash VARCHAR(255);
+  DECLARE nombre_completo VARCHAR(150);
+
+  INSERT INTO persona(nombre, apellido_paterno, apellido_materno, telefono, direccion)
+  VALUES (p_nombre, p_apellido_paterno, p_apellido_materno, p_telefono, p_direccion);
+  SET v_id_persona = LAST_INSERT_ID();
+
+  SET correo_gen = CONCAT(p_nombre_usuario, '@sneakstyle.com');
+  SET pass_hash = SHA2(p_contrasenia, 256);
+
+  INSERT INTO usuarios(nombre_usuario, contra_usuario, correo_usuario, rol_usuario, id_persona)
+  VALUES (p_nombre_usuario, pass_hash, correo_gen, 'admin', v_id_persona);
+  SET v_id_usuario = LAST_INSERT_ID();
+
+  SET nombre_completo = CONCAT(p_nombre, ' ', p_apellido_paterno, ' ', p_apellido_materno);
+
+  INSERT INTO empleado(id_persona, id_usuario, nombre_completo, telefono, correo_empleado, contrasenia)
+  VALUES (v_id_persona, v_id_usuario, nombre_completo, p_telefono, correo_gen, pass_hash);
+
+  SET p_id_empleado = LAST_INSERT_ID();
+END $$
+
+-- UPDATE
+-- UPDATE EMPLEADO COMPLETO
+DROP PROCEDURE IF EXISTS sp_empleado_update $$
+CREATE PROCEDURE sp_empleado_update(
+  IN p_id_empleado INT,
+  IN p_nombre VARCHAR(100),
+  IN p_apellido_paterno VARCHAR(100),
+  IN p_apellido_materno VARCHAR(100),
+  IN p_telefono VARCHAR(15),
+  IN p_direccion TEXT
+)
+BEGIN
+  DECLARE v_id_persona INT;
+  DECLARE nombre_completo VARCHAR(150);
+
+  -- Obtener ID de persona
+  SELECT id_persona INTO v_id_persona
+  FROM empleado
+  WHERE id_empleado = p_id_empleado;
+
+  -- Actualizar tabla persona
+  UPDATE persona
+  SET nombre = p_nombre,
+      apellido_paterno = p_apellido_paterno,
+      apellido_materno = p_apellido_materno,
+      telefono = p_telefono,
+      direccion = p_direccion
+  WHERE id_persona = v_id_persona;
+
+  -- Actualizar nombre completo
+  SET nombre_completo = CONCAT(p_nombre, ' ', p_apellido_paterno, ' ', p_apellido_materno);
+
+  -- Actualizar tabla empleado
+  UPDATE empleado
+  SET nombre_completo = nombre_completo,
+      telefono = p_telefono
+  WHERE id_empleado = p_id_empleado;
+END $$
+
+
+-- DELETE
+DROP PROCEDURE IF EXISTS sp_empleado_delete $$
+CREATE PROCEDURE sp_empleado_delete(IN p_id_empleado INT)
+BEGIN
+  UPDATE empleado SET activo = FALSE WHERE id_empleado = p_id_empleado;
+END $$
+
+-- GET ALL
+DROP PROCEDURE IF EXISTS sp_empleado_getAll $$
+CREATE PROCEDURE sp_empleado_getAll()
+BEGIN
+  SELECT 
+    e.id_empleado,
+    e.nombre_completo,
+    e.telefono,
+    e.correo_empleado,
+    CONCAT(p.nombre, ' ', p.apellido_paterno, ' ', p.apellido_materno) AS persona,
+    u.nombre_usuario,
+    u.correo_usuario
+  FROM empleado e
+  JOIN persona p ON e.id_persona = p.id_persona
+  JOIN usuarios u ON e.id_usuario = u.id_usuario
+  WHERE e.activo = TRUE;
+END $$
+
+-- GET BY ID
+DROP PROCEDURE IF EXISTS sp_empleado_getById $$
+CREATE PROCEDURE sp_empleado_getById(IN p_id_empleado INT)
+BEGIN
+  SELECT 
+    e.id_empleado,
+    e.nombre_completo,
+    e.telefono,
+    e.correo_empleado,
+    CONCAT(p.nombre, ' ', p.apellido_paterno, ' ', p.apellido_materno) AS persona,
+    u.nombre_usuario,
+    u.correo_usuario
+  FROM empleado e
+  JOIN persona p ON e.id_persona = p.id_persona
+  JOIN usuarios u ON e.id_usuario = u.id_usuario
+  WHERE e.id_empleado = p_id_empleado;
+END $$
+
+-- PROVEEDORES
+DROP PROCEDURE IF EXISTS sp_proveedor_add $$
+CREATE PROCEDURE sp_proveedor_add(
+  IN p_nombre_empresa VARCHAR(100),
+  IN p_nombre_contacto VARCHAR(100),
+  IN p_telefono VARCHAR(15),
+  IN p_direccion TEXT
+)
+BEGIN
+  INSERT INTO proveedor(nombre_empresa, nombre_contacto, telefono, direccion)
+  VALUES (p_nombre_empresa, p_nombre_contacto, p_telefono, p_direccion);
+END $$
+
+DROP PROCEDURE IF EXISTS sp_proveedor_update $$
+CREATE PROCEDURE sp_proveedor_update(
+  IN p_id_proveedor INT,
+  IN p_nombre_empresa VARCHAR(100),
+  IN p_nombre_contacto VARCHAR(100),
+  IN p_telefono VARCHAR(15),
+  IN p_direccion TEXT
+)
+BEGIN
+  UPDATE proveedor
+  SET nombre_empresa = p_nombre_empresa,
+      nombre_contacto = p_nombre_contacto,
+      telefono = p_telefono,
+      direccion = p_direccion
+  WHERE id_proveedor = p_id_proveedor;
+END $$
+
+DROP PROCEDURE IF EXISTS sp_proveedor_delete $$
+CREATE PROCEDURE sp_proveedor_delete(IN p_id_proveedor INT)
+BEGIN
+  UPDATE proveedor SET activo = FALSE WHERE id_proveedor = p_id_proveedor;
+END $$
+
+DROP PROCEDURE IF EXISTS sp_proveedor_getAll $$
+CREATE PROCEDURE sp_proveedor_getAll()
+BEGIN
+  SELECT * FROM proveedor WHERE activo = TRUE;
+END $$
+
+DROP PROCEDURE IF EXISTS sp_proveedor_getById $$
+CREATE PROCEDURE sp_proveedor_getById(IN p_id_proveedor INT)
+BEGIN
+  SELECT * FROM proveedor WHERE id_proveedor = p_id_proveedor;
+END $$
+
+-- LOGIN
+DROP PROCEDURE IF EXISTS sp_login_usuario $$
+CREATE PROCEDURE sp_login_usuario(
+    IN p_correo VARCHAR(100),
+    IN p_contrasena VARCHAR(255)
+)
+BEGIN
+    SELECT id_usuario, nombre_usuario, rol_usuario
+    FROM usuarios
+    WHERE correo_usuario = p_correo
+      AND contra_usuario = SHA2(p_contrasena, 256)
+      AND activo = TRUE
+    LIMIT 1;
+END $$
+
+DELIMITER ;
+
+USE SneakStyle;
+DELIMITER $$
+
+-- ==========================
+-- INVENTARIO - GET ALL
+-- ==========================
+DROP PROCEDURE IF EXISTS sp_inventario_getAll $$
+CREATE PROCEDURE sp_inventario_getAll()
+BEGIN
+  SELECT
+    i.id_inventario AS idInventario,
+    i.cantidad      AS cantidad,
+    p.idProducto    AS productoId,
+    pr.id_proveedor AS proveedorId,
+    p.nombreProducto AS productoNombre,
+    COALESCE(pr.nombre_empresa, pr.nombre_contacto, CONCAT('Prov ', pr.id_proveedor))
+      AS proveedorNombre
+  FROM inventario i
+  JOIN producto  p  ON p.idProducto    = i.id_producto
+  JOIN proveedor pr ON pr.id_proveedor = i.id_proveedor
+  ORDER BY i.id_inventario;
+END $$
+
+-- ==========================
+-- INVENTARIO - GET BY ID
+-- ==========================
+DROP PROCEDURE IF EXISTS sp_inventario_getById $$
+CREATE PROCEDURE sp_inventario_getById(IN p_id_inventario INT)
+BEGIN
+  SELECT
+    i.id_inventario AS idInventario,
+    i.cantidad      AS cantidad,
+    p.idProducto    AS productoId,
+    pr.id_proveedor AS proveedorId,
+    p.nombreProducto AS productoNombre,
+    COALESCE(pr.nombre_empresa, pr.nombre_contacto, CONCAT('Prov ', pr.id_proveedor))
+      AS proveedorNombre
+  FROM inventario i
+  JOIN producto  p  ON p.idProducto    = i.id_producto
+  JOIN proveedor pr ON pr.id_proveedor = i.id_proveedor
+  WHERE i.id_inventario = p_id_inventario
+  LIMIT 1;
+END $$
+
+-- ==========================
+-- INVENTARIO - INSERT
+-- ==========================
+DROP PROCEDURE IF EXISTS sp_inventario_insert $$
+CREATE PROCEDURE sp_inventario_insert(
+  IN  p_id_producto   INT,
+  IN  p_id_proveedor  INT,
+  IN  p_cantidad      INT,
+  OUT p_id_inventario INT
+)
+BEGIN
+  INSERT INTO inventario(id_producto, id_proveedor, cantidad)
+  VALUES (p_id_producto, p_id_proveedor, p_cantidad);
+  SET p_id_inventario = LAST_INSERT_ID();
+END $$
+
+-- ==========================
+-- INVENTARIO - UPDATE
+-- ==========================
+DROP PROCEDURE IF EXISTS sp_inventario_update $$
+CREATE PROCEDURE sp_inventario_update(
+  IN p_id_inventario INT,
+  IN p_id_producto   INT,
+  IN p_id_proveedor  INT,
+  IN p_cantidad      INT
+)
+BEGIN
+  UPDATE inventario
+  SET id_producto  = p_id_producto,
+      id_proveedor = p_id_proveedor,
+      cantidad     = p_cantidad
+  WHERE id_inventario = p_id_inventario;
+END $$
+
+-- ==========================
+-- INVENTARIO - DELETE FÍSICO
+-- ==========================
+DROP PROCEDURE IF EXISTS sp_inventario_deleteFisico $$
+CREATE PROCEDURE sp_inventario_deleteFisico(IN p_id_inventario INT)
+BEGIN
+  DELETE FROM inventario
+  WHERE id_inventario = p_id_inventario;
+END $$
+
+DELIMITER ;
+
+
+-- ==========================
+-- DATOS DE PRUEBA
+-- ==========================
+INSERT INTO persona (nombre, apellido_paterno, apellido_materno, telefono, direccion)
+VALUES ('Admin', 'Sistema', 'Central', '1234567890', 'Oficina Central');
+
+INSERT INTO usuarios (nombre_usuario, contra_usuario, correo_usuario, rol_usuario, id_persona) 
+VALUES ('admin', SHA2('Admin123', 256), 'admin@sneakstyle.com', 'admin', LAST_INSERT_ID());
+
+INSERT INTO admin (id_admin) VALUES (LAST_INSERT_ID());
+
+INSERT INTO persona (nombre, apellido_paterno, apellido_materno, telefono, direccion)
+VALUES ('Cliente', 'Ejemplo', 'Prueba', '9876543210', 'Colonia Centro');
+
+INSERT INTO usuarios (nombre_usuario, contra_usuario, correo_usuario, rol_usuario, id_persona) 
+VALUES ('cliente1', SHA2('Cliente123', 256), 'cliente1@sneakstyle.com', 'cliente', LAST_INSERT_ID());
+
+INSERT INTO cliente (id_cliente) VALUES (LAST_INSERT_ID());
+
+-- Productos
+INSERT INTO producto (nombreProducto, descripcion, precio, categoria, estatus) 
+VALUES 
+('Nike Air Force 1', 'Clásicos tenis blancos con diseño icónico.', 2399.99, 'Tenis', 1),
+('Adidas Superstar', 'Modelo clásico de Adidas con franjas negras.', 1999.50, 'Tenis', 1),
+('Vans Old Skool', 'Tenis casuales con franja blanca lateral.', 1799.00, 'Casual', 1);
+
+-- Proveedores
+INSERT INTO proveedor(nombre_empresa, nombre_contacto, telefono, direccion)
+VALUES 
+('Nike Inc.', 'Carlos Just Do It', '4771234567', 'Oficinas CDMX'),
+('Adidas México', 'Ana ThreeStripes', '4777654321', 'Oficinas Guadalajara'),
+('Vans LATAM', 'Luis Sk8', '4775551234', 'Oficinas León');
+
+-- Inventario
+INSERT INTO inventario(id_producto, id_proveedor, cantidad) 
+VALUES 
+(1, 1, 100),
+(2, 2, 75),
+(3, 3, 50);
+-- Empleado 1
+CALL sp_empleado_add(
+    'Lucía', 'Ramírez', 'González',
+    '4771112233', 'Av. Principal #123',
+    'luciaram', 'Lucia123', @id_empleado_1
+);
+
+-- Empleado 2
+CALL sp_empleado_add(
+    'Marco', 'Díaz', 'López',
+    '4772223344', 'Calle Reforma #456',
+    'marcodz', 'Marco456', @id_empleado_2
+);
+
+-- Empleado 3
+CALL sp_empleado_add(
+    'Sandra', 'Torres', 'Martínez',
+    '4773334455', 'Col. Las Torres',
+    'sandratm', 'Sandra789', @id_empleado_3
+);
+
+-- Empleado 4
+CALL sp_empleado_add(
+    'Carlos', 'Mendoza', 'Pérez',
+    '4774445566', 'Blvd. Aeropuerto #999',
+    'carlosmp', 'Carlos321', @id_empleado_4
+);
+
+-- Empleado 5
+CALL sp_empleado_add(
+    'Fernanda', 'Reyes', 'Hernández',
+    '4775556677', 'Zona Centro',
+    'fernandahz', 'Fer999', @id_empleado_5
+);
+
+
+select * from persona ;
+select * from usuarios;
+select * from empleado;
+select * from cliente;
+select * from proveedor;
+select * from producto;
+select * from gestion_producto;
+select * from inventario;
+
+ALTER TABLE producto
+ADD COLUMN imagenBase64 MEDIUMTEXT NULL;
+
+USE SneakStyle;
+
+-- 6.1) Columna nueva para foto Base64 (si no existe)
+ALTER TABLE empleado
+  ADD COLUMN  foto_base64 MEDIUMTEXT NULL;
+
+-- 6.2) SPs de empleados con soporte de foto
+
+DROP PROCEDURE IF EXISTS sp_empleado_add;
+DELIMITER $$
+CREATE PROCEDURE sp_empleado_add(
+  IN p_nombre VARCHAR(100),
+  IN p_apellido_paterno VARCHAR(100),
+  IN p_apellido_materno VARCHAR(100),
+  IN p_telefono VARCHAR(15),
+  IN p_direccion TEXT,
+  IN p_nombre_usuario VARCHAR(50),
+  IN p_contrasenia VARCHAR(255),
+  IN p_foto_base64 MEDIUMTEXT,
+  OUT p_id_empleado INT
+)
+BEGIN
+  DECLARE v_id_persona INT;
+  DECLARE v_id_usuario INT;
+  DECLARE correo_gen VARCHAR(100);
+  DECLARE pass_hash VARCHAR(255);
+  DECLARE nombre_completo VARCHAR(150);
+
+  INSERT INTO persona(nombre, apellido_paterno, apellido_materno, telefono, direccion)
+  VALUES (p_nombre, p_apellido_paterno, p_apellido_materno, p_telefono, p_direccion);
+  SET v_id_persona = LAST_INSERT_ID();
+
+  SET correo_gen = CONCAT(p_nombre_usuario, '@sneakstyle.com');
+  SET pass_hash = SHA2(p_contrasenia, 256);
+
+  INSERT INTO usuarios(nombre_usuario, contra_usuario, correo_usuario, rol_usuario, id_persona)
+  VALUES (p_nombre_usuario, pass_hash, correo_gen, 'admin', v_id_persona);
+  SET v_id_usuario = LAST_INSERT_ID();
+
+  SET nombre_completo = CONCAT(p_nombre, ' ', p_apellido_paterno, ' ', p_apellido_materno);
+
+  INSERT INTO empleado(
+    id_persona, id_usuario, nombre_completo, telefono, correo_empleado, contrasenia, foto_base64
+  )
+  VALUES (v_id_persona, v_id_usuario, nombre_completo, p_telefono, correo_gen, pass_hash, p_foto_base64);
+
+  SET p_id_empleado = LAST_INSERT_ID();
+END $$
+DELIMITER ;
+
+DROP PROCEDURE IF EXISTS sp_empleado_update;
+DELIMITER $$
+CREATE PROCEDURE sp_empleado_update(
+  IN p_id_empleado INT,
+  IN p_nombre VARCHAR(100),
+  IN p_apellido_paterno VARCHAR(100),
+  IN p_apellido_materno VARCHAR(100),
+  IN p_telefono VARCHAR(15),
+  IN p_direccion TEXT,
+  IN p_foto_base64 MEDIUMTEXT
+)
+BEGIN
+  DECLARE v_id_persona INT;
+  DECLARE nombre_completo VARCHAR(150);
+
+  SELECT id_persona INTO v_id_persona
+  FROM empleado
+  WHERE id_empleado = p_id_empleado;
+
+  UPDATE persona
+  SET nombre = p_nombre,
+      apellido_paterno = p_apellido_paterno,
+      apellido_materno = p_apellido_materno,
+      telefono = p_telefono,
+      direccion = p_direccion
+  WHERE id_persona = v_id_persona;
+
+  SET nombre_completo = CONCAT(p_nombre, ' ', p_apellido_paterno, ' ', p_apellido_materno);
+
+  UPDATE empleado
+  SET nombre_completo = nombre_completo,
+      telefono = p_telefono,
+      foto_base64 = p_foto_base64
+  WHERE id_empleado = p_id_empleado;
+END $$
+DELIMITER ;
+
+DROP PROCEDURE IF EXISTS sp_empleado_getAll;
+DELIMITER $$
+CREATE PROCEDURE sp_empleado_getAll()
+BEGIN
+  SELECT 
+    e.id_empleado,
+    e.nombre_completo,
+    e.telefono,
+    e.correo_empleado,
+    e.foto_base64,
+    CONCAT(p.nombre, ' ', p.apellido_paterno, ' ', p.apellido_materno) AS persona,
+    u.nombre_usuario,
+    u.correo_usuario
+  FROM empleado e
+  JOIN persona p ON e.id_persona = p.id_persona
+  JOIN usuarios u ON e.id_usuario = u.id_usuario
+  WHERE e.activo = TRUE;
+END $$
+DELIMITER ;
+
+DROP PROCEDURE IF EXISTS sp_empleado_getById;
+DELIMITER $$
+CREATE PROCEDURE sp_empleado_getById(IN p_id_empleado INT)
+BEGIN
+  SELECT 
+    e.id_empleado,
+    e.nombre_completo,
+    e.telefono,
+    e.correo_empleado,
+    e.foto_base64,
+    CONCAT(p.nombre, ' ', p.apellido_paterno, ' ', p.apellido_materno) AS persona,
+    u.nombre_usuario,
+    u.correo_usuario
+  FROM empleado e
+  JOIN persona p ON e.id_persona = p.id_persona
+  JOIN usuarios u ON e.id_usuario = u.id_usuario
+  WHERE e.id_empleado = p_id_empleado;
+END $$
+DELIMITER ;
+
