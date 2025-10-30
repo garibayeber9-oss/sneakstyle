@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SneakStyle - Login</title>
+    <link rel="stylesheet" href="css/index.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Fondo de página -->
+    <div class="background-container">
+        <img src="imagenes/fondo2.png" alt="Background" class="background-image">
+    </div>
+
+    <!-- Contenido principal -->
+    <div class="login-wrapper">
+        <div class="login-container">
+            <!-- Logo centrado -->
+            <div class="logo-container">
+                <img src="imagenes/logo.jpg" alt="SneakStyle Logo" class="logo-image">
+            </div>
+            
+            <h1 class="login-title">SNEAKSTYLE</h1>
+            <p class="login-subtitle">Donde el estilo y el rendimiento se encuentran</p>
+            
+            <!-- Botones animados -->
+            <div class="animated-buttons">
+                <button class="animated-btn bounce">
+                    <i class="fas fa-shoe-prints"></i>
+                </button>
+                <button class="animated-btn bounce delay-100">
+                    <i class="fas fa-table-tennis-paddle-ball"></i>
+                </button>
+                <button class="animated-btn bounce delay-200">
+                    <i class="fas fa-trophy"></i>
+                </button>
+            </div>
+            
+            <!-- Formulario -->
+            <form class="login-form" id="loginForm">
+                <div class="form-group">
+                    <label for="email">Correo Electrónico</label>
+                    <div class="input-group">
+                        <i class="fas fa-envelope input-icon"></i>
+                        <input type="email" id="email" placeholder="tucorreo@ejemplo.com" required>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">Contraseña</label>
+                    <div class="input-group">
+                        <i class="fas fa-lock input-icon"></i>
+                        <input type="password" id="password" placeholder="••••••••" required>
+                        <button type="button" class="toggle-password">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="form-options">
+                    <div class="remember-me">
+                        <input type="checkbox" id="remember">
+                        <label for="remember">Recuérdame</label>
+                    </div>
+                    <a href="#" class="forgot-password">¿Olvidaste tu contraseña?</a>
+                </div>
+                
+                <button type="submit" class="login-btn" id="loginBtn">Iniciar Sesión</button>
+                
+                <div class="divider">
+                    <span>O continúa con</span>
+                </div>
+                
+                <div class="social-login">
+                    <button type="button" class="social-btn">
+                        <i class="fab fa-google"></i>
+                    </button>
+                    <button type="button" class="social-btn">
+                        <i class="fab fa-facebook-f"></i>
+                    </button>
+                    <button type="button" class="social-btn">
+                        <i class="fab fa-twitter"></i>
+                    </button>
+                </div>
+                
+                <div class="register-link">
+                    ¿No tienes una cuenta? <a href="register.html">Regístrate</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/index.js"></script>
+</body>
+</html>

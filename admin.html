@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SneakStyle - Admin</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Estilos personalizados -->
+    <link rel="stylesheet" href="css/admin.css">
+</head>
+<body class="bg-gray-100">
+    <!-- Fondo similar al login - Versión corregida -->
+    <div class="background-container">
+        <img src="imagenes/fondo2.png" alt="Background" class="background-image">
+    </div>
+
+    <!-- Contenedor principal -->
+    <div class="admin-wrapper">
+        <div class="admin-container">
+            <!-- Logo -->
+            <div class="logo-container mb-5">
+                <img src="imagenes/logo.jpg" alt="SneakStyle Logo" class="logo-image">
+            </div>
+            
+            <h1 class="admin-title">PANEL ADMINISTRATIVO</h1>
+            <p class="admin-subtitle" id="welcomeMessage">Bienvenido al sistema de gestión</p>
+            
+            <!-- Botones de acción -->
+            <div class="admin-actions">
+                <button class="admin-btn bg-purple-600 hover:bg-purple-700" id="manageProducts">
+                    <i class="fas fa-shoe-prints"></i>
+                    <span>Productos</span>
+                </button>
+                
+                <button class="admin-btn bg-blue-600 hover:bg-blue-700" id="manageSuppliers">
+                    <i class="fas fa-truck"></i>
+                    <span>Proveedores</span>
+                </button>
+                
+                <button class="admin-btn bg-green-600 hover:bg-green-700" id="manageUsers">
+                    <i class="fas fa-users"></i>
+                    <span>Usuarios</span>
+                </button>
+                
+                <button class="admin-btn bg-yellow-600 hover:bg-yellow-700" id="manageInventory">
+                    <i class="fas fa-boxes"></i>
+                    <span>Inventario</span>
+                </button>
+            </div>
+            
+            <!-- Botón de logout -->
+            <button class="logout-btn mt-5" id="logout">
+                <i class="fas fa-sign-out-alt"></i>
+                Cerrar Sesión
+            </button>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Script personalizado -->
+    <script src="js/admin.js"></script>
+</body>
+</html>
