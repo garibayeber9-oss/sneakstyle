@@ -1,0 +1,84 @@
+/* Animaciones personalizadas */
+@keyframes float {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-20px);
+    }
+}
+
+.animate-float {
+    animation: float 3s ease-in-out infinite;
+}
+
+@keyframes pulse-slow {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.8;
+    }
+}
+
+.animate-pulse-slow {
+    animation: pulse-slow 5s infinite;
+}
+
+/* Efectos hover personalizados */
+.hover-scale {
+    transition: transform 0.3s ease;
+}
+
+.hover-scale:hover {
+    transform: scale(1.05);
+}
+
+/* Estilos para el menú mobile */
+.mobile-menu {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background-color: white;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    z-index: 40;
+}
+
+.mobile-menu.active {
+    display: block;
+}
+
+/* Ajustes para el carrusel de testimonios */
+.testimonial-carousel {
+    scroll-snap-type: x mandatory;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+}
+
+.testimonial-slide {
+    scroll-snap-align: start;
+}
+
+/* Mejoras de accesibilidad */
+:focus-visible {
+    outline: 2px solid var(--dark-gray);
+    outline-offset: 2px;
+}
+
+/* Ajustes responsivos */
+@media (max-width: 768px) {
+    .hero-content {
+        text-align: center;
+    }
+    
+    .hero-buttons {
+        justify-content: center;
+    }
+}
+
+/* Transiciones suaves */
+a, button, .transition {
+    transition: all 0.3s ease;
+}

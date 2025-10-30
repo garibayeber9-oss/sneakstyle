@@ -1,0 +1,352 @@
+/* Variables */
+:root {
+    --white: #ffffff;
+    --light-gray: #f5f5f5;
+    --medium-gray: #e0e0e0;
+    --dark-gray: #333333;
+    --black: #000000;
+    --primary: #333333;
+    --primary-hover: #222222;
+    --error: #e74c3c;
+}
+
+/* Reset y estilos base */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: var(--dark-gray);
+    background-color: var(--light-gray);
+}
+
+/* Fondo */
+.background-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    overflow: hidden;
+}
+
+.background-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0.9;
+}
+
+/* Contenedor principal */
+.products-container {
+    max-width: 1200px;
+    margin: 2rem auto;
+    background-color: rgba(255, 255, 255, 0.9);
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    backdrop-filter: blur(5px);
+}
+
+/* Encabezado */
+.products-header {
+    background-color: var(--dark-gray);
+    color: var(--white);
+    padding: 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.logo-title {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.logo {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid var(--medium-gray);
+}
+
+.products-header h1 {
+    font-size: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.search-box {
+    position: relative;
+}
+
+.search-box input {
+    padding: 0.5rem 1rem 0.5rem 2.5rem;
+    border-radius: 30px;
+    border: none;
+    background-color: rgba(255, 255, 255, 0.2);
+    color: var(--white);
+    width: 250px;
+}
+
+.search-box input::placeholder {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.search-box button {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: var(--white);
+    cursor: pointer;
+}
+
+.add-btn {
+    background-color: var(--white);
+    color: var(--dark-gray);
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 30px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.add-btn:hover {
+    background-color: var(--light-gray);
+    transform: translateY(-2px);
+}
+
+/* Tabla de productos */
+.products-table-container {
+    padding: 1.5rem;
+    overflow-x: auto;
+}
+
+.products-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.products-table th, 
+.products-table td {
+    padding: 1rem;
+    text-align: left;
+    border-bottom: 1px solid var(--medium-gray);
+}
+
+.products-table th {
+    background-color: var(--light-gray);
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    letter-spacing: 0.5px;
+}
+
+.product-img {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 5px;
+}
+
+.action-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1rem;
+    margin: 0 0.25rem;
+    padding: 0.5rem;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+}
+
+.action-btn.edit {
+    color: var(--dark-gray);
+}
+
+.action-btn.edit:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+.action-btn.delete {
+    color: var(--error);
+}
+
+.action-btn.delete:hover {
+    background-color: rgba(231, 76, 60, 0.1);
+}
+
+/* Modal */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 100;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background-color: var(--white);
+    border-radius: 10px;
+    width: 90%;
+    max-width: 600px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+}
+
+.modal-header {
+    background-color: var(--dark-gray);
+    color: var(--white);
+    padding: 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-radius: 10px 10px 0 0;
+}
+
+.modal-header h2 {
+    font-size: 1.25rem;
+}
+
+.close-modal {
+    background: none;
+    border: none;
+    color: var(--white);
+    font-size: 1.5rem;
+    cursor: pointer;
+    line-height: 1;
+}
+
+.modal-form {
+    padding: 1.5rem;
+}
+
+.form-group {
+    margin-bottom: 1.25rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--medium-gray);
+    border-radius: 5px;
+    font-family: inherit;
+}
+
+.form-group textarea {
+    min-height: 100px;
+    resize: vertical;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+.cancel-btn,
+.save-btn {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.cancel-btn {
+    background-color: var(--medium-gray);
+    color: var(--dark-gray);
+}
+
+.cancel-btn:hover {
+    background-color: #d1d5db;
+}
+
+.save-btn {
+    background-color: var(--dark-gray);
+    color: var(--white);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.save-btn:hover {
+    background-color: var(--primary-hover);
+}
+
+/* Animaciones */
+@keyframes bounce {
+    0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+    40% { transform: translateY(-10px); }
+    60% { transform: translateY(-5px); }
+}
+
+.bounce {
+    animation: bounce 2s infinite;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .products-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .header-actions {
+        width: 100%;
+        flex-direction: column;
+    }
+    
+    .search-box input {
+        width: 100%;
+    }
+    
+    .add-btn {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .products-table th, 
+    .products-table td {
+        padding: 0.75rem 0.5rem;
+        font-size: 0.9rem;
+    }
+}
